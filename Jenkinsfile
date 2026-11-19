@@ -1,12 +1,13 @@
+
 pipeline {
-    agent any 
+    agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'roseaw-dockerhub'  
-        DOCKER_IMAGE = 'cithit/roseaw'                                   //<-----change this to your MiamiID!
+        DOCKER_CREDENTIALS_ID = 'abishek20051-dockerhub'
+        DOCKER_IMAGE = 'abishek20051/225-lab4-1'
         IMAGE_TAG = "build-${BUILD_NUMBER}"
-        GITHUB_URL = 'https://github.com/miamioh-cit/225-lab4-1.git'     //<-----change this to match this new repository!
-        KUBECONFIG = credentials('roseaw-225')                           //<-----change this to match your kubernetes credentials (MiamiID-225)! 
+        GITHUB_URL = 'https://github.com/chhetra2-ops/225-lab4-1.git'
+        KUBECONFIG = credentials('chhetra2-225')
     }
 
     stages {
@@ -21,11 +22,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'roseaw-dockerhub') {
+                    docker.withRegistry('https://registry.hub.docker.com', "${DOCKER_CREDENTIALS_ID}") {
                         docker.build("${DOCKER_IMAGE}:${IMAGE_TAG}")
+                    }
                 }
             }
-        }
         }
 
         stage('Push Docker Image') {
@@ -41,15 +42,13 @@ pipeline {
         stage('Deploy to Dev Environment') {
             steps {
                 script {
-                    // This sets up the Kubernetes configuration using the specified KUBECONFIG
                     def kubeConfig = readFile(KUBECONFIG)
-                    // This updates the deployment-dev.yaml to use the new image tag
                     sh "sed -i 's|${DOCKER_IMAGE}:latest|${DOCKER_IMAGE}:${IMAGE_TAG}|' deployment-dev.yaml"
                     sh "kubectl apply -f deployment-dev.yaml"
                 }
             }
         }
-        
+
         stage('Check Kubernetes Cluster') {
             steps {
                 script {
@@ -60,7 +59,6 @@ pipeline {
     }
 
     post {
-
         success {
             slackSend color: "good", message: "Build Completed: ${env.JOB_NAME} ${env.BUILD_NUMBER}"
         }
