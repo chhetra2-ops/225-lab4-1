@@ -7,13 +7,11 @@ pipeline {
         DOCKER_IMAGE = 'abishek20051/225-lab4-1'
         IMAGE_TAG = "build-${BUILD_NUMBER}"
         GITHUB_URL = 'https://github.com/chhetra2-ops/225-lab4-1.git'
-        KUBECONFIG = credentials('chhetra2-225')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                cleanWs()
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']],
                           userRemoteConfigs: [[url: "${GITHUB_URL}"]]])
             }
@@ -41,8 +39,7 @@ pipeline {
 
         stage('Deploy to Dev Environment') {
             steps {
-                script {
-                    def kubeConfig = readFile(KUBECONFIG)
+                withKubeConfig([credentialsId: 'chhetra2-225']) {
                     sh "sed -i 's|${DOCKER_IMAGE}:latest|${DOCKER_IMAGE}:${IMAGE_TAG}|' deployment-dev.yaml"
                     sh "kubectl apply -f deployment-dev.yaml"
                 }
@@ -51,7 +48,7 @@ pipeline {
 
         stage('Check Kubernetes Cluster') {
             steps {
-                script {
+                withKubeConfig([credentialsId: 'chhetra2-225']) {
                     sh "kubectl get all"
                 }
             }
