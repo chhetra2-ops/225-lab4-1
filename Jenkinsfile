@@ -24,7 +24,7 @@ pipeline {
                     -v "$WORKSPACE:/app" \
                     -w /app \
                     python:3.9-slim \
-                    sh -c "pip install --no-cache-dir -r requirements.txt && pytest -v"
+                    sh -c "pip install --no-cache-dir -r requirements-dev.txt && pytest -v"
                 '''
             }
         }
@@ -36,7 +36,7 @@ pipeline {
                     -v "$WORKSPACE:/app" \
                     -w /app \
                     python:3.9-slim \
-                    sh -c "pip install --no-cache-dir -r requirements.txt && pip-audit -r requirements.txt"
+                    sh -c "pip install --no-cache-dir pip-audit && pip-audit -r requirements.txt"
                 '''
             }
         }
